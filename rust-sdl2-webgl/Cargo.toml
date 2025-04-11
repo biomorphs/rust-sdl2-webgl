@@ -1,0 +1,17 @@
+[package]
+name = "rust-sdl2-webgl"
+version = "0.1.0"
+edition = "2024"
+
+# shared dependencies
+[dependencies]
+glow = { version = "=0.16.0" }
+
+# non-wasm dependencies
+# note that the 'bundled' feature of sdl2 will download sdl 2 and build the c libs for you
+[target.'cfg(not(any(target_arch = "wasm32")))'.dependencies]
+sdl2 = { version = "=0.37.0", features = [ "bundled" ], optional = true }
+
+[features]
+default = [ "use-sdl2" ]
+use-sdl2 = [ "sdl2" ]
