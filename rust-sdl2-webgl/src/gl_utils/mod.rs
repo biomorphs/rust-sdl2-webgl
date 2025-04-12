@@ -1,5 +1,5 @@
 mod gl_types;   // use our own gl types
-use glow::HasContext;
+pub use glow::HasContext;
 
 // &'static - ' is a label that denotes lifetime
 // the static error string will be alive through the entire program lifetime

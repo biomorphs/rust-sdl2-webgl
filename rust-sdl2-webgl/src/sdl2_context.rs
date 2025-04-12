@@ -64,6 +64,7 @@ pub fn run_sdl2_event_loop(mut context: SDL2Context)
             }
         }
 
+        super::tick();
         super::draw_gl(&context.gl, context.window_width, context.window_height);
         context.window.gl_swap_window();
         

@@ -4,6 +4,8 @@ use wasm_bindgen::prelude::wasm_bindgen;
 // call them from dom events/requestAnimation
 #[wasm_bindgen]
 pub fn draw_webgl() {
+    super::tick();  // always tick before drawing
+
     // get the glow context from a WebGL2 context on wasm32 targets
     use wasm_bindgen::JsCast;
     let canvas = web_sys::window()
