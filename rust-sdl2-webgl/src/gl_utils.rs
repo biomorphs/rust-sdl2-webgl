@@ -1,9 +1,9 @@
-mod gl_types;   // use our own gl types
+pub mod gl_types;   // use our own gl types
 pub use glow::HasContext;
 
 // &'static - ' is a label that denotes lifetime
 // the static error string will be alive through the entire program lifetime
-fn load_shader_program(gl : &glow::Context, vertex_shader_src: &str, fragment_shader_src: &str) -> Result<gl_types::ShaderProgram, String>
+pub fn load_shader_program(gl : &glow::Context, vertex_shader_src: &str, fragment_shader_src: &str) -> Result<gl_types::ShaderProgram, String>
 {
     if vertex_shader_src.is_empty() || fragment_shader_src.is_empty()
     {
@@ -59,7 +59,7 @@ fn load_shader_program(gl : &glow::Context, vertex_shader_src: &str, fragment_sh
     return Ok(program);
 }
 
-fn unload_shader_program(gl : &glow::Context, program: &gl_types::ShaderProgram)
+pub fn unload_shader_program(gl : &glow::Context, program: &gl_types::ShaderProgram)
 {
     unsafe {
         gl.delete_program(*program);

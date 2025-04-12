@@ -18,8 +18,8 @@ pub fn create_sdl2_window_and_context(window_width: u32, window_height: u32) -> 
         let sdl = sdl2::init().unwrap();        // init sdl
         let video = sdl.video().unwrap();   // init sdl video
         let gl_attr = video.gl_attr();
-        gl_attr.set_context_profile(sdl2::video::GLProfile::Core);
-        gl_attr.set_context_version(3, 0);
+        gl_attr.set_context_profile(sdl2::video::GLProfile::GLES);  // we want a gles compatible context
+        gl_attr.set_context_version(3, 0);              // v3+ please
         let window = video          // create opengl window
             .window("SDL 2 Window!", window_width, window_height)
             .opengl()
@@ -64,7 +64,7 @@ pub fn run_sdl2_event_loop(mut context: SDL2Context)
             }
         }
 
-        super::tick();
+        super::tick(&context.gl);
         super::draw_gl(&context.gl, context.window_width, context.window_height);
         context.window.gl_swap_window();
         

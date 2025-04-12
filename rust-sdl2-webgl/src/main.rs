@@ -1,16 +1,58 @@
-mod gl_utils;   // use our gl utils module
-mod global_state;   // access our global state
+pub mod gl_utils;   // use our gl utils module + make them public to the crate
+pub mod global_state;   // access our global state
 use glow::HasContext;   // all implementations use glow gl context
 
-// main tick/update entry point
-fn tick()
+// main init fn called once on start
+fn init(gl : &glow::Context, state: &mut global_state::GlobalState)
 {
-    if let Ok(mut value) = global_state::GLOBALS.lock()  // use this syntax to get a mutable reference to the globals
+    let vertex_shader_src = r#"
+        #version 300 es
+        const vec2 verts[3] = vec2[3](
+            vec2(0.5f, 1.0f),
+            vec2(0.0f, 0.0f),
+            vec2(1.0f, 0.0f)
+        );
+        out vec2 vert;
+        void main() {
+            vert = verts[gl_VertexID];
+            gl_Position = vec4(vert - 0.5, 0.0, 1.0);
+        }
+        "#;
+    
+    let fragment_shader_src = r#"
+        #version 300 es
+        precision mediump float;
+        in vec2 vert;
+        out vec4 color;
+        void main() {
+            color = vec4(vert, 0.5, 1.0);
+        }
+    "#;
+
+    state.simple_tri_shader = match gl_utils::load_shader_program(gl, vertex_shader_src, fragment_shader_src) {
+        Ok(shader_program) => Some(shader_program),
+        Err(text) => {
+            println!("{text}");
+                None
+        }
+    }
+}
+
+// main tick/update entry point
+fn tick(gl : &glow::Context)
+{
+    if let Ok(mut globals) = global_state::GLOBALS.lock()  // use this syntax to get a mutable reference to the globals
     {
-        value.bg_red = value.bg_red + 0.001;
-        if value.bg_red > 1.0
+        if !globals.initialised
         {
-            value.bg_red = 0.0;
+            init(gl, &mut globals);
+            globals.initialised = true;
+        }
+
+        globals.bg_red = globals.bg_red + 0.001;
+        if globals.bg_red > 1.0
+        {
+            globals.bg_red = 0.0;
         }
     }
 }
@@ -27,11 +69,14 @@ fn draw_gl(gl : &glow::Context, _viewport_width: u32, _viewport_height: u32)
 
 // cleanup function for desktop app
 #[cfg(feature = "sdl2")]
-fn cleanup_gl_resources(_gl : &glow::Context)
+fn cleanup_gl_resources(gl : &glow::Context)
 {
-    //unsafe {
+    if let Ok(mut globals) = global_state::GLOBALS.lock()  // use this syntax to get a mutable reference to the globals
+    {
         // cleanup gl stuff
-    //}
+        gl_utils::unload_shader_program(gl, &globals.simple_tri_shader.unwrap());
+        globals.simple_tri_shader = None;
+    }
 }
 
 // window resize callback for desktop app
