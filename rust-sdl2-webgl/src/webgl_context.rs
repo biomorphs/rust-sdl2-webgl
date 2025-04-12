@@ -21,5 +21,5 @@ pub fn draw_webgl() {
         .dyn_into::<web_sys::WebGl2RenderingContext>()
         .unwrap();
     let gl = glow::Context::from_webgl2_context(webgl2_context);
-    super::draw_gl(&gl);    // call the shared render fn
+    super::draw_gl(&gl, canvas.width(), canvas.height());    // call the shared render fn
 }
