@@ -1,4 +1,5 @@
 use glow::HasContext;   // all implementations use glow gl context
+mod gl_utils;   // use our gl utils module
 
 // import platform contexts as modules
 #[cfg(feature = "sdl2")]
