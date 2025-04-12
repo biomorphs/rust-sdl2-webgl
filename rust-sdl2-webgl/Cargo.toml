@@ -13,5 +13,6 @@ glow = { version = "=0.16.0" }
 sdl2 = { version = "=0.37.0", features = [ "bundled" ], optional = true }
 
 [features]
-default = [ "use-sdl2" ]
-use-sdl2 = [ "sdl2" ]
+default = [ "sdl2" ]
+sdl2 = [ "dep:sdl2" ]
+webgl = [ ]
