@@ -50,11 +50,11 @@ pub fn load_shader_program(gl : &glow::Context, vertex_shader_src: &str, fragmen
         }
 
         // we dont need the shader objects any more, only the program
-        //gl.detach_shader(program, vertex_shader);
-        //gl.delete_shader(vertex_shader);
+        gl.detach_shader(program, vertex_shader);
+        gl.delete_shader(vertex_shader);
 
-        //gl.detach_shader(program, fragment_shader);
-        //gl.delete_shader(fragment_shader);
+        gl.detach_shader(program, fragment_shader);
+        gl.delete_shader(fragment_shader);
     }
     return Ok(program);
 }

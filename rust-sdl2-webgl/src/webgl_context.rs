@@ -43,8 +43,6 @@ pub fn wasm_main_loop(gl_context : glow::Context)
     
     // get a lambda that can be called from JS
     *g.borrow_mut() = Some(Closure::wrap(Box::new(move || {
-        console_log!("Tick!");
-
         use wasm_bindgen::JsCast;
         let canvas = window()
            .document()

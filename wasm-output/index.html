@@ -6,17 +6,8 @@
     <canvas id="canvas" width="640" height="480"></canvas>
     <script src="./rust-sdl2-webgl.js"></script>
     <script>
-      // see https://github.com/rustwasm/wasm-bindgen/blob/main/examples/without-a-bundler-no-modules/index.html
-      const { draw_webgl } = wasm_bindgen;  // import draw_webgl from wasm_bindgen
-      function drawCallback()
-      {
-        draw_webgl();
-        requestAnimationFrame(drawCallback);
-      }
-
       window.addEventListener("load", async () => {
         await wasm_bindgen("./rust-sdl2-webgl_bg.wasm");
-        requestAnimationFrame(drawCallback);
       });
     </script>
   </body>
