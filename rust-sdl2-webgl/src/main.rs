@@ -114,9 +114,11 @@ fn main() {
         // initialise the app
         if let Ok(mut globals) = global_state::GLOBALS.lock()  // get a mutable reference to the globals
         {
-            globals.gl = Some(gl_context);    // cache the context
-            init(&mut globals);
+            init(&gl_context, &mut globals);
         }
+
+        // main loop is now handled via requestAnimationFrame
+        webgl_context::wasm_main_loop(gl_context);
     }
 
     #[cfg(feature = "sdl2")]
