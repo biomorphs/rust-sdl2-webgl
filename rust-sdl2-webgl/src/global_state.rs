@@ -5,11 +5,15 @@ use std::sync::Mutex;
 use crate::gl_utils::*;
 
 pub struct GlobalState {
-    pub initialised: bool,
     pub bg_red: f32,
-    pub simple_tri_shader: Option<gl_types::ShaderProgram>
+    pub simple_tri_shader: Option<gl_types::ShaderProgram>,
+    pub vertex_array : Option<gl_types::VertexArray>
 }
 
 pub static GLOBALS: Mutex<GlobalState> = Mutex::new(
-    GlobalState { initialised: false, bg_red: 0.0, simple_tri_shader: None }
+    GlobalState {
+        bg_red: 0.0, 
+        simple_tri_shader: None, 
+        vertex_array: None 
+    }
 );
