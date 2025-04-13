@@ -6,7 +6,7 @@ pub struct SDL2Context
     window: sdl2::video::Window,
     window_width: u32,
     window_height: u32,
-    gl: glow::Context
+    pub gl: glow::Context
 }
 
 // sdl 2 window + context creation
@@ -28,7 +28,8 @@ pub fn create_sdl2_window_and_context(window_width: u32, window_height: u32) -> 
             .unwrap();
         let gl_context = window.gl_create_context().unwrap();   // get the gl context from the window
         let gl = glow::Context::from_loader_function(|s| video.gl_get_proc_address(s) as *const _);     // get the gl function pointers from the context
-        new_context = SDL2Context { gl: gl, 
+        new_context = SDL2Context {
+            gl: gl,
             window: window, 
             event_loop: sdl.event_pump().unwrap(), 
             _sdl: sdl, 
@@ -36,8 +37,8 @@ pub fn create_sdl2_window_and_context(window_width: u32, window_height: u32) -> 
             window_width: window_width,
             window_height: window_height
          };
+         new_context
     }
-    new_context
 }
 
 // sdl 2 event pump
@@ -56,7 +57,7 @@ pub fn run_sdl2_event_loop(mut context: SDL2Context)
                         {
                             context.window_width = w as u32;
                             context.window_height = h as u32;
-                            super::on_canvas_size_changed(&context.gl, context.window_width, context.window_height);
+                            super::on_canvas_size_changed(context.window_width, context.window_height);
                         }
                     }
                     _ => {}
@@ -64,12 +65,16 @@ pub fn run_sdl2_event_loop(mut context: SDL2Context)
             }
         }
 
-        super::tick(&context.gl);
-        super::draw_gl(&context.gl, context.window_width, context.window_height);
+        if let Ok(mut globals) = super::global_state::GLOBALS.lock()  // get a mutable reference to the globals
+        {
+            super::tick(&mut globals);
+            super::draw_gl(&context.gl, &mut globals, context.window_width, context.window_height);
+        }
+        
         context.window.gl_swap_window();
         
         if !running {
-            super::cleanup_gl_resources(&context.gl);
+            super::cleanup_gl_resources(&context.gl, &mut super::global_state::GLOBALS.lock().unwrap());
         }
     }
 }

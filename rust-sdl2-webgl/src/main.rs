@@ -1,3 +1,13 @@
+#[macro_use]    // export macros from logger
+pub mod logger;
+
+// import platform contexts as modules
+#[cfg(feature = "sdl2")]
+mod sdl2_context;   
+
+#[cfg(feature = "webgl")]
+mod webgl_context;
+
 pub mod gl_utils;   // use our gl utils module + make them public to the crate
 pub mod global_state;   // access our global state
 use glow::HasContext;   // all implementations use glow gl context
@@ -5,9 +15,7 @@ use glow::HasContext;   // all implementations use glow gl context
 // main init fn called once on start
 fn init(gl : &glow::Context, state: &mut global_state::GlobalState)
 {
-    println!("Init now");
-    let vertex_shader_src = r#"
-        #version 300 es
+    let vertex_shader_src = r#"#version 300 es
         const vec2 verts[3] = vec2[3](
             vec2(0.5f, 1.0f),
             vec2(0.0f, 1.0f),
@@ -20,8 +28,7 @@ fn init(gl : &glow::Context, state: &mut global_state::GlobalState)
         }
         "#;
     
-    let fragment_shader_src = r#"
-        #version 300 es
+    let fragment_shader_src = r#"#version 300 es
         precision mediump float;
         in vec2 vert;
         out vec4 color;
@@ -33,79 +40,97 @@ fn init(gl : &glow::Context, state: &mut global_state::GlobalState)
     state.simple_tri_shader = match gl_utils::load_shader_program(gl, vertex_shader_src, fragment_shader_src) {
         Ok(shader_program) => Some(shader_program),
         Err(text) => {
-            println!("Failed to load shaders - {text}");
+            console_log!("Failed to load shaders - {text}");
             None
+        }
+    };
+
+    unsafe {
+        state.vertex_array = match gl.create_vertex_array() {
+            Ok(array) => Some(array),
+            Err(text) => {
+                console_log!("Failed to create vertex array - {text}");
+                None
+            }
         }
     }
 }
 
 // main tick/update entry point
-fn tick(gl : &glow::Context)
+fn tick(state: &mut global_state::GlobalState)
 {
-    if let Ok(mut globals) = global_state::GLOBALS.lock()  // use this syntax to get a mutable reference to the globals
+    state.bg_red = state.bg_red + 0.001;
+    if state.bg_red > 1.0
     {
-        if !globals.initialised
-        {
-            init(gl, &mut globals);
-            globals.initialised = true;
-        }
-
-        globals.bg_red = globals.bg_red + 0.001;
-        if globals.bg_red > 1.0
-        {
-            globals.bg_red = 0.0;
-        }
+        state.bg_red = 0.0;
     }
 }
 
 // main update/drawing entry point
-fn draw_gl(gl : &glow::Context, _viewport_width: u32, _viewport_height: u32)
+fn draw_gl(gl : &glow::Context, state: &global_state::GlobalState,_viewport_width: u32, _viewport_height: u32)
 {
-    if let Ok(globals) = global_state::GLOBALS.lock()
-    {
-        let clear_red: f32 = globals.bg_red;  // read bg_red from globals
-        unsafe {
-            gl.clear_color(clear_red, 0.0, 0.0, 1.0);
-            gl.clear(glow::COLOR_BUFFER_BIT);
+    unsafe {
+        gl.clear_color(state.bg_red, 0.0, 0.0, 1.0);
+        gl.clear(glow::COLOR_BUFFER_BIT);
 
-            gl.use_program(globals.simple_tri_shader);
-            gl.draw_arrays(glow::TRIANGLES, 0, 3);
-        }
+        gl.use_program(state.simple_tri_shader);
+        gl.bind_vertex_array(state.vertex_array);
+        gl.draw_arrays(glow::TRIANGLES, 0, 3);
     }
 }
 
 // cleanup function for desktop app
 #[cfg(feature = "sdl2")]
-fn cleanup_gl_resources(gl : &glow::Context)
+fn cleanup_gl_resources(gl : &glow::Context, state: &mut global_state::GlobalState)
 {
-    if let Ok(mut globals) = global_state::GLOBALS.lock()  // use this syntax to get a mutable reference to the globals
-    {
-        // cleanup gl stuff
-        gl_utils::unload_shader_program(gl, &globals.simple_tri_shader.unwrap());
-        globals.simple_tri_shader = None;
+    // cleanup gl stuff
+    gl_utils::unload_shader_program(gl, &state.simple_tri_shader.unwrap());
+    state.simple_tri_shader = None;
+    unsafe{
+        gl.delete_vertex_array(state.vertex_array.unwrap());
     }
+    state.vertex_array = None;
 }
 
 // window resize callback for desktop app
 #[cfg(feature = "sdl2")]
-fn on_canvas_size_changed(_gl : &glow::Context, _new_width: u32, _new_height: u32)
+fn on_canvas_size_changed(_new_width: u32, _new_height: u32)
 {
-    // do gl stuff to handle resizes
+    // handle window resize
 }
 
-// import platform contexts as modules
-#[cfg(feature = "sdl2")]
-mod sdl2_context;   
-
-#[cfg(feature = "webgl")]
-mod webgl_context;
-
-// main entry point, does nothing in webgl build
+// main entry point
 fn main() {
-    // Set up the gl context for SDL 2 and init the event loop
+    #[cfg(feature = "webgl")]
+    {
+        // set up console panic hook for wasm so we see panic messages in the browser logs
+        console_error_panic_hook::set_once();
+
+        // get the gl context from the canvas once
+        // Awkward, but glow will not return the same context for a canvas over multiple calls
+        // See https://github.com/grovesNL/glow/issues/285
+        let gl_context = webgl_context::get_gl_context();
+
+        // initialise the app
+        if let Ok(mut globals) = global_state::GLOBALS.lock()  // get a mutable reference to the globals
+        {
+            globals.gl = Some(gl_context);    // cache the context
+            init(&mut globals);
+        }
+    }
+
     #[cfg(feature = "sdl2")]
     {
-        let context= sdl2_context::create_sdl2_window_and_context(1024, 768);
+        let context = sdl2_context::create_sdl2_window_and_context(1024, 768);
+
+        // initialise the app 
+        if let Ok(mut globals) = global_state::GLOBALS.lock()  // get a mutable reference to the globals
+        {
+            init(&context.gl, &mut globals);
+        }
+
+        // run the main loop
         sdl2_context::run_sdl2_event_loop(context);
     }
+    
 }
