@@ -3,12 +3,14 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 // Get the main browser window or panic
-fn window() -> web_sys::Window {
+fn window() -> web_sys::Window 
+{
     web_sys::window().expect("no global `window` exists")
 }
 
 // Request next animation frame with a closure to call, or panic
-fn request_animation_frame(f: &Closure<dyn FnMut()>) {
+fn request_animation_frame(f: &Closure<dyn FnMut()>) 
+{
     window()
         .request_animation_frame(f.as_ref().unchecked_ref())
         .expect("should register `requestAnimationFrame` OK");
@@ -36,7 +38,7 @@ pub fn get_gl_context() -> glow::Context
 }
 
 // main loop implemented via websys request_animation_frame
-pub fn wasm_main_loop(gl_context : glow::Context) 
+pub fn wasm_main_loop(gl_context : glow::Context, mut app_state: crate::app::ApplicationState) 
 {
     let f = Rc::new(RefCell::new(None));    // so the lambda can register a copy of itself with register animation frame
     let g = f.clone();
@@ -52,11 +54,8 @@ pub fn wasm_main_loop(gl_context : glow::Context)
            .dyn_into::<web_sys::HtmlCanvasElement>()
            .unwrap();
 
-        if let Ok(mut globals) = super::global_state::GLOBALS.lock()  // get a mutable reference to the globals
-        {
-            crate::app::tick(&mut globals);  // always tick before drawing
-            crate::app::draw_gl(&gl_context, &mut globals, canvas.width(), canvas.height());    // call the shared render fn
-        }
+        crate::app::tick(&mut app_state);  // always tick before drawing
+        crate::app::draw_gl(&gl_context, &mut app_state, canvas.width(), canvas.height());    // call the shared render fn
 
         request_animation_frame(f.borrow().as_ref().unwrap());  // register next frame
     }) as Box<dyn FnMut()>));

@@ -1,10 +1,21 @@
 use glow::HasContext;  
-use crate::global_state;
 use crate::gl_utils;
 
+pub struct ApplicationState {
+    pub bg_red: f32,
+    pub simple_tri_shader: Option<gl_utils::gl_types::ShaderProgram>,
+    pub vertex_array : Option<gl_utils::gl_types::VertexArray>
+}
+
 // main init fn called once on start
-pub fn init(gl : &glow::Context, state: &mut global_state::GlobalState)
+pub fn init(gl : &glow::Context) -> ApplicationState
 {
+    let mut new_state = ApplicationState {
+        bg_red: 0.0, 
+        simple_tri_shader: None, 
+        vertex_array: None 
+    };
+
     let vertex_shader_src = r#"#version 300 es
         const vec2 verts[3] = vec2[3](
             vec2(0.5f, 1.0f),
@@ -26,8 +37,7 @@ pub fn init(gl : &glow::Context, state: &mut global_state::GlobalState)
             color = vec4(vert, 0.5, 1.0);
         }
     "#;
-
-    state.simple_tri_shader = match gl_utils::load_shader_program(gl, vertex_shader_src, fragment_shader_src) {
+    new_state.simple_tri_shader = match gl_utils::load_shader_program(gl, vertex_shader_src, fragment_shader_src) {
         Ok(shader_program) => Some(shader_program),
         Err(text) => {
             console_log!("Failed to load shaders - {text}");
@@ -36,7 +46,7 @@ pub fn init(gl : &glow::Context, state: &mut global_state::GlobalState)
     };
 
     unsafe {
-        state.vertex_array = match gl.create_vertex_array() {
+        new_state.vertex_array = match gl.create_vertex_array() {
             Ok(array) => Some(array),
             Err(text) => {
                 console_log!("Failed to create vertex array - {text}");
@@ -44,10 +54,11 @@ pub fn init(gl : &glow::Context, state: &mut global_state::GlobalState)
             }
         }
     }
+    new_state
 }
 
 // main tick/update entry point
-pub fn tick(state: &mut global_state::GlobalState)
+pub fn tick(state: &mut ApplicationState)
 {
     state.bg_red = state.bg_red + 0.001;
     if state.bg_red > 1.0
@@ -57,7 +68,7 @@ pub fn tick(state: &mut global_state::GlobalState)
 }
 
 // main update/drawing entry point
-pub fn draw_gl(gl : &glow::Context, state: &global_state::GlobalState,_viewport_width: u32, _viewport_height: u32)
+pub fn draw_gl(gl : &glow::Context, state: &ApplicationState,_viewport_width: u32, _viewport_height: u32)
 {
     unsafe {
         gl.clear_color(state.bg_red, 0.0, 0.0, 1.0);
@@ -71,7 +82,7 @@ pub fn draw_gl(gl : &glow::Context, state: &global_state::GlobalState,_viewport_
 
 // cleanup function for desktop app
 #[cfg(feature = "sdl2")]
-pub fn cleanup_gl_resources(gl : &glow::Context, state: &mut global_state::GlobalState)
+pub fn cleanup_gl_resources(gl : &glow::Context, state: &mut ApplicationState)
 {
     // cleanup gl stuff
     gl_utils::unload_shader_program(gl, &state.simple_tri_shader.unwrap());
@@ -80,11 +91,4 @@ pub fn cleanup_gl_resources(gl : &glow::Context, state: &mut global_state::Globa
         gl.delete_vertex_array(state.vertex_array.unwrap());
     }
     state.vertex_array = None;
-}
-
-// window resize callback for desktop app
-#[cfg(feature = "sdl2")]
-pub fn on_canvas_size_changed(_new_width: u32, _new_height: u32)
-{
-    // handle window resize
 }

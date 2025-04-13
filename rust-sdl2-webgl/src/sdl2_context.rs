@@ -42,7 +42,7 @@ pub fn create_sdl2_window_and_context(window_width: u32, window_height: u32) -> 
 }
 
 // sdl 2 event pump
-pub fn run_sdl2_event_loop(mut context: SDL2Context)
+pub fn run_sdl2_event_loop(mut context: SDL2Context, mut app_state: crate::app::ApplicationState)
 {
     let mut running = true;
     while running {
@@ -50,31 +50,18 @@ pub fn run_sdl2_event_loop(mut context: SDL2Context)
             for event in context.event_loop.poll_iter() {
                 match event {
                     sdl2::event::Event::Quit { .. } => running = false,
-
-                    // note that capturing enum values as '_' is used to ignore them
-                    sdl2::event::Event::Window { timestamp: _, window_id: _, win_event } => {
-                        if let sdl2::event::WindowEvent::Resized(w, h) = win_event      // detect window resize
-                        {
-                            context.window_width = w as u32;
-                            context.window_height = h as u32;
-                            crate::app::on_canvas_size_changed(context.window_width, context.window_height);
-                        }
-                    }
                     _ => {}
                 }
             }
         }
 
-        if let Ok(mut globals) = super::global_state::GLOBALS.lock()  // get a mutable reference to the globals
-        {
-            crate::app::tick(&mut globals);
-            crate::app::draw_gl(&context.gl, &mut globals, context.window_width, context.window_height);
-        }
+        crate::app::tick(&mut app_state);
+        crate::app::draw_gl(&context.gl, &app_state, context.window_width, context.window_height);
         
         context.window.gl_swap_window();
         
         if !running {
-            crate::app::cleanup_gl_resources(&context.gl, &mut super::global_state::GLOBALS.lock().unwrap());
+            crate::app::cleanup_gl_resources(&context.gl, &mut app_state);
         }
     }
 }
