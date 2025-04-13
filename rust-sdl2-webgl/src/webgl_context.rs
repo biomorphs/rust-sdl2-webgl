@@ -54,8 +54,8 @@ pub fn wasm_main_loop(gl_context : glow::Context)
 
         if let Ok(mut globals) = super::global_state::GLOBALS.lock()  // get a mutable reference to the globals
         {
-            super::tick(&mut globals);  // always tick before drawing
-            super::draw_gl(&gl_context, &mut globals, canvas.width(), canvas.height());    // call the shared render fn
+            crate::app::tick(&mut globals);  // always tick before drawing
+            crate::app::draw_gl(&gl_context, &mut globals, canvas.width(), canvas.height());    // call the shared render fn
         }
 
         request_animation_frame(f.borrow().as_ref().unwrap());  // register next frame

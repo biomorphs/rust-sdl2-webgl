@@ -57,7 +57,7 @@ pub fn run_sdl2_event_loop(mut context: SDL2Context)
                         {
                             context.window_width = w as u32;
                             context.window_height = h as u32;
-                            super::on_canvas_size_changed(context.window_width, context.window_height);
+                            crate::app::on_canvas_size_changed(context.window_width, context.window_height);
                         }
                     }
                     _ => {}
@@ -67,14 +67,14 @@ pub fn run_sdl2_event_loop(mut context: SDL2Context)
 
         if let Ok(mut globals) = super::global_state::GLOBALS.lock()  // get a mutable reference to the globals
         {
-            super::tick(&mut globals);
-            super::draw_gl(&context.gl, &mut globals, context.window_width, context.window_height);
+            crate::app::tick(&mut globals);
+            crate::app::draw_gl(&context.gl, &mut globals, context.window_width, context.window_height);
         }
         
         context.window.gl_swap_window();
         
         if !running {
-            super::cleanup_gl_resources(&context.gl, &mut super::global_state::GLOBALS.lock().unwrap());
+            crate::app::cleanup_gl_resources(&context.gl, &mut super::global_state::GLOBALS.lock().unwrap());
         }
     }
 }
