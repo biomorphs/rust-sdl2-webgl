@@ -3,8 +3,7 @@ use crate::gl_utils;
 
 pub struct ApplicationState {
     pub bg_red: f32,
-    pub simple_tri_shader: Option<gl_utils::gl_types::ShaderProgram>,
-    pub vertex_array : Option<gl_utils::gl_types::VertexArray>
+    pub simple_tri_shader: Option<gl_utils::gl_types::ShaderProgram>
 }
 
 // main init fn called once on start
@@ -12,8 +11,7 @@ pub fn init(gl : &glow::Context) -> ApplicationState
 {
     let mut new_state = ApplicationState {
         bg_red: 0.0, 
-        simple_tri_shader: None, 
-        vertex_array: None 
+        simple_tri_shader: None
     };
 
     let vertex_shader_src = r#"#version 300 es
@@ -44,16 +42,6 @@ pub fn init(gl : &glow::Context) -> ApplicationState
             None
         }
     };
-
-    unsafe {
-        new_state.vertex_array = match gl.create_vertex_array() {
-            Ok(array) => Some(array),
-            Err(text) => {
-                console_log!("Failed to create vertex array - {text}");
-                None
-            }
-        }
-    }
     new_state
 }
 
@@ -75,7 +63,6 @@ pub fn draw_gl(gl : &glow::Context, state: &ApplicationState,_viewport_width: u3
         gl.clear(glow::COLOR_BUFFER_BIT);
 
         gl.use_program(state.simple_tri_shader);
-        gl.bind_vertex_array(state.vertex_array);
         gl.draw_arrays(glow::TRIANGLES, 0, 3);
     }
 }
@@ -87,8 +74,4 @@ pub fn cleanup_gl_resources(gl : &glow::Context, state: &mut ApplicationState)
     // cleanup gl stuff
     gl_utils::unload_shader_program(gl, &state.simple_tri_shader.unwrap());
     state.simple_tri_shader = None;
-    unsafe{
-        gl.delete_vertex_array(state.vertex_array.unwrap());
-    }
-    state.vertex_array = None;
 }

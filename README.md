@@ -8,4 +8,3 @@ Messing about with rust on desktop + wasm
 
 To do 
 - continue to make more modular
-- pass app state around instead of the horrible static mutex thing 
