@@ -1,5 +1,7 @@
 # rust-sdl2-webgl
-Lets get a basic gl renderer working on desktop + web
-Using sdl 2 for the platform bits 
-glow for opengl context
-websys for wasm stuff
+
+Messing about with rust on desktop + wasm 
+
+- using glow for opengl context 
+- uses SDL2 for desktop window + gl context creation
+- uses websys + canvas + webgl 2 for wasm 
