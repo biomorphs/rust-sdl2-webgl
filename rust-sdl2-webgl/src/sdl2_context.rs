@@ -1,6 +1,6 @@
 pub struct SDL2Context
 {
-    _sdl: sdl2::Sdl,
+    sdl: sdl2::Sdl,
     _gl_context: sdl2::video::GLContext,
     event_loop: sdl2::EventPump,
     window: sdl2::video::Window,
@@ -32,7 +32,7 @@ pub fn create_sdl2_window_and_context(window_width: u32, window_height: u32) -> 
             gl: gl,
             window: window, 
             event_loop: sdl.event_pump().unwrap(), 
-            _sdl: sdl, 
+            sdl: sdl, 
             _gl_context: gl_context,
             window_width: window_width,
             window_height: window_height
@@ -45,6 +45,9 @@ pub fn create_sdl2_window_and_context(window_width: u32, window_height: u32) -> 
 pub fn run_sdl2_event_loop(mut context: SDL2Context, mut app_state: crate::app::ApplicationState)
 {
     let mut running = true;
+    let sdl_timer = context.sdl.timer().unwrap();
+    let perf_timer_frequency = sdl_timer.performance_frequency();
+    let mut perf_timer_last_count = sdl_timer.performance_counter();
     while running {
         {
             for event in context.event_loop.poll_iter() {
@@ -55,7 +58,11 @@ pub fn run_sdl2_event_loop(mut context: SDL2Context, mut app_state: crate::app::
             }
         }
 
-        crate::app::tick(&mut app_state);
+        let perf_timer_this_count = sdl_timer.performance_counter();
+        let tick_delta : f64 = (perf_timer_this_count - perf_timer_last_count) as f64 / perf_timer_frequency as f64;
+        perf_timer_last_count = perf_timer_this_count;
+
+        crate::app::tick(&mut app_state, tick_delta);
         crate::app::draw_gl(&context.gl, &app_state, context.window_width, context.window_height);
         
         context.window.gl_swap_window();

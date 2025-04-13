@@ -17,14 +17,14 @@ fn main() {
         // set up console panic hook for wasm so we see panic messages in the browser logs
         console_error_panic_hook::set_once();
 
-        // get the gl context from the canvas once
-        let gl_context = webgl_context::get_gl_context();
+        // get the gl context from the canvas
+        let wasm_context = webgl_context::create_context();
 
         // initialise the app
-        let app_state = app::init(&gl_context);
+        let app_state = app::init(&wasm_context.gl);
 
         // main loop is now handled via requestAnimationFrame
-        webgl_context::wasm_main_loop(gl_context, app_state);
+        webgl_context::wasm_main_loop(wasm_context, app_state);
     }
 
     #[cfg(feature = "sdl2")]

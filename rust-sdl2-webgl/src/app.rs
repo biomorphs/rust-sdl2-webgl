@@ -31,8 +31,9 @@ pub fn init(gl : &glow::Context) -> ApplicationState
         precision mediump float;
         in vec2 vert;
         out vec4 color;
+        uniform vec3 colourMultiplier;
         void main() {
-            color = vec4(vert, 0.5, 1.0);
+            color = vec4(colourMultiplier * vec3(vert, 0.5), 1.0);
         }
     "#;
     new_state.simple_tri_shader = match gl_utils::load_shader_program(gl, vertex_shader_src, fragment_shader_src) {
@@ -46,9 +47,9 @@ pub fn init(gl : &glow::Context) -> ApplicationState
 }
 
 // main tick/update entry point
-pub fn tick(state: &mut ApplicationState)
+pub fn tick(state: &mut ApplicationState, delta_time: f64)
 {
-    state.bg_red = state.bg_red + 0.001;
+    state.bg_red = (state.bg_red as f64 + delta_time) as f32;
     if state.bg_red > 1.0
     {
         state.bg_red = 0.0;
@@ -63,6 +64,8 @@ pub fn draw_gl(gl : &glow::Context, state: &ApplicationState,_viewport_width: u3
         gl.clear(glow::COLOR_BUFFER_BIT);
 
         gl.use_program(state.simple_tri_shader);
+        let colour_mul_uniform_pos = gl.get_uniform_location(state.simple_tri_shader.unwrap(), "colourMultiplier");
+        gl.uniform_3_f32(colour_mul_uniform_pos.as_ref(), 1.0 - state.bg_red, state.bg_red, 1.0 - state.bg_red);
         gl.draw_arrays(glow::TRIANGLES, 0, 3);
     }
 }
