@@ -8,9 +8,3 @@ Messing about with rust on desktop + wasm
 
 To do 
 - continue to make more modular
-- add nalgebra or nalgebra-glm and start adding basic functionality
-    - define a 3d camera 
-    - pass matrices to shaders
-- build some geometry for drawing
-    - basic cube/sphere/triangle instances 
-- 

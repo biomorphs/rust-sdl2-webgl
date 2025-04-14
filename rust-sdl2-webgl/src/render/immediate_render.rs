@@ -2,6 +2,7 @@ use glow::HasContext;
 use nalgebra::{Point3,Point4};
 use crate::gl_utils;
 
+#[allow(dead_code)]     // Stop compiler warning that we never read these
 struct ImmediateRenderVertex
 {
     position: Point4<f32>,
@@ -20,12 +21,13 @@ pub struct ImmediateRender
 {
     shader_program: Option<gl_utils::gl_types::ShaderProgram>,
     vertex_array: Option<gl_utils::gl_types::VertexArray>,
+    vertex_buffer: Option<gl_utils::gl_types::Buffer>,
     current_vertices: Vec<ImmediateRenderVertex>,
     current_triangle_draws: Vec<ImmediateRenderDrawcall>
 }
 
 impl ImmediateRender {
-    pub fn new(gl : &glow::Context) -> Self {
+    pub fn new(gl : &glow::Context, max_vertex_count: u32) -> Self {
         let vertex_shader_src = r#"#version 300 es
             uniform mat4 view_projection_matrix;
             layout (location = 0) in vec4 vs_in_position; 
@@ -52,17 +54,44 @@ impl ImmediateRender {
             }
         };
         let vertex_array: Option<gl_utils::gl_types::VertexArray>;
+        let vertex_buffer: Option<gl_utils::gl_types::Buffer>;
+        let vertex_size = size_of::<ImmediateRenderVertex>();
         unsafe {
+            vertex_buffer = match gl.create_buffer() {
+                Ok(buffer) => Some(buffer),
+                Err(text) => {
+                    console_log!("Failed to create vertex buffer - {text}");
+                    None
+                }
+            };
+            let vertex_data_size_bytes = vertex_size * max_vertex_count as usize;
+            gl.bind_buffer(glow::ARRAY_BUFFER, vertex_buffer);
+            gl.buffer_data_size(glow::ARRAY_BUFFER, vertex_data_size_bytes as i32, glow::DYNAMIC_DRAW);
+
             vertex_array = match gl.create_vertex_array() {
                 Ok(vertex_array) => Some(vertex_array),
                 Err(text) => {
                     console_log!("Failed to create vertex array - {text}");
                     None
                 }
-            }
+            };
+
+            let position_attrib_location = gl.get_attrib_location(shader_program.unwrap(), "vs_in_position");
+            let colour_attrib_location = gl.get_attrib_location(shader_program.unwrap(), "vs_in_colour");
+            gl.bind_vertex_array(vertex_array);
+            gl.enable_vertex_attrib_array(position_attrib_location.unwrap());
+            gl.vertex_attrib_pointer_f32(position_attrib_location.unwrap(), 4, glow::FLOAT, false, vertex_size as i32, 0);
+            let colour_data_offset = size_of::<Point4<f32>>() as i32;
+            gl.enable_vertex_attrib_array(colour_attrib_location.unwrap());
+            gl.vertex_attrib_pointer_f32(colour_attrib_location.unwrap(), 4, glow::FLOAT, false, vertex_size as i32, colour_data_offset );
+
+            // reset bound vao/buffer
+            gl.bind_buffer(glow::ARRAY_BUFFER, None);
+            gl.bind_vertex_array(None);
         }
         Self {
             vertex_array: vertex_array,
+            vertex_buffer: vertex_buffer,
             shader_program: shader_program,
             current_vertices: Vec::new(),
             current_triangle_draws: Vec::new()
@@ -99,7 +128,12 @@ impl ImmediateRender {
 
     pub fn draw(&self, gl : &glow::Context, camera: &crate::render::camera::Camera) {
         unsafe {
+             // copy vertex data to buffer
+            gl.bind_buffer(glow::ARRAY_BUFFER, self.vertex_buffer);
+            gl.buffer_sub_data_u8_slice(glow::ARRAY_BUFFER, 0, self.current_vertices.align_to::<u8>().1);
+
             gl.use_program(self.shader_program);
+            
             let view_proj_uniform_pos = gl.get_uniform_location(self.shader_program.unwrap(), "view_projection_matrix");
             gl.uniform_matrix_4_f32_slice(view_proj_uniform_pos.as_ref(), false, camera.get_view_projection_matrix().as_slice());
             

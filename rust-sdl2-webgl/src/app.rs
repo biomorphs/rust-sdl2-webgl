@@ -15,7 +15,7 @@ pub struct ApplicationState {
 pub fn init(gl : &glow::Context) -> ApplicationState
 {
     let mut new_state = ApplicationState {
-        im_render: ImmediateRender::new(gl),
+        im_render: ImmediateRender::new(gl, 4096),
         bg: 0.0, 
         time_elapsed: 0.0,
         simple_tri_shader: None
@@ -58,9 +58,21 @@ pub fn tick(state: &mut ApplicationState, delta_time: f64)
 {
     state.im_render.clear();
     state.im_render.add_triangle(
-        &Point3::new(0.0, 1.0, 0.0), &Point4::new(1.0, 0.0, 0.0, 1.0),
-        &Point3::new(1.0, -1.0, 0.0), &Point4::new(1.0, 0.0, 0.0, 1.0),
-        &Point3::new(-1.0, -1.0, 0.0), &Point4::new(1.0, 0.0, 0.0, 1.0)
+        &Point3::new(0.0, 1.0, 2.0), &Point4::new(1.0, 0.0, 0.0, 1.0),
+        &Point3::new(1.0, -1.0, 2.0), &Point4::new(1.0, 0.0, 0.0, 1.0),
+        &Point3::new(-1.0, -1.0, 2.0), &Point4::new(1.0, 0.0, 0.0, 1.0)
+    );
+
+    state.im_render.add_triangle(
+        &Point3::new(2.0, 1.0, 1.0), &Point4::new(0.0, 1.0, 0.0, 1.0),
+        &Point3::new(3.0, -1.0, 1.0), &Point4::new(0.0, 1.0, 0.0, 1.0),
+        &Point3::new(1.0, -1.0, 1.0), &Point4::new(0.0, 1.0, 0.0, 1.0)
+    );
+
+    state.im_render.add_triangle(
+        &Point3::new(4.0, 1.0, 0.0), &Point4::new(0.0, 0.0, 1.0, 1.0),
+        &Point3::new(5.0, -1.0, 0.0), &Point4::new(0.0, 0.0, 1.0, 1.0),
+        &Point3::new(3.0, -1.0, 0.0), &Point4::new(0.0, 0.0, 1.0, 1.0)
     );
 
     state.time_elapsed += delta_time;
