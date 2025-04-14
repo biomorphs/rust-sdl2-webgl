@@ -2,3 +2,4 @@
 
 pub type ShaderProgram = glow::WebProgramKey;
 pub type VertexArray = glow::VertexArray;
+pub type Buffer = glow::Buffer;

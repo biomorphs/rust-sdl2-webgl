@@ -1,9 +1,11 @@
 use glow::HasContext;  
 use crate::gl_utils;
 use crate::render::camera::Camera;
-use nalgebra::{Point3, Vector3};
+use crate::render::immediate_render::ImmediateRender;
+use nalgebra::{Point3, Point4, Vector3};
 
 pub struct ApplicationState {
+    pub im_render: ImmediateRender,
     pub bg: f32,
     pub time_elapsed: f64,
     pub simple_tri_shader: Option<gl_utils::gl_types::ShaderProgram>
@@ -13,6 +15,7 @@ pub struct ApplicationState {
 pub fn init(gl : &glow::Context) -> ApplicationState
 {
     let mut new_state = ApplicationState {
+        im_render: ImmediateRender::new(gl),
         bg: 0.0, 
         time_elapsed: 0.0,
         simple_tri_shader: None
@@ -53,6 +56,13 @@ pub fn init(gl : &glow::Context) -> ApplicationState
 // main tick/update entry point
 pub fn tick(state: &mut ApplicationState, delta_time: f64)
 {
+    state.im_render.clear();
+    state.im_render.add_triangle(
+        &Point3::new(0.0, 1.0, 0.0), &Point4::new(1.0, 0.0, 0.0, 1.0),
+        &Point3::new(1.0, -1.0, 0.0), &Point4::new(1.0, 0.0, 0.0, 1.0),
+        &Point3::new(-1.0, -1.0, 0.0), &Point4::new(1.0, 0.0, 0.0, 1.0)
+    );
+
     state.time_elapsed += delta_time;
     state.bg = 0.5 + (state.time_elapsed.sin() as f32) * 0.5;
 }
@@ -64,14 +74,13 @@ pub fn draw_gl(gl : &glow::Context, state: &ApplicationState,viewport_width: u32
     let mut render_camera = Camera::make_projection(0.1, 100.0, aspect, 90.0 );
     render_camera.look_at(Point3::new(2.0,1.0,5.0), Point3::new(0.0,0.0,0.0), Vector3::y());
 
-    console_log!("{}", state.bg);
-
     unsafe {
         gl.clear_color(state.bg, state.bg, state.bg, 1.0);
         gl.clear(glow::COLOR_BUFFER_BIT);
 
-        gl.use_program(state.simple_tri_shader);
+        state.im_render.draw(gl, &render_camera);
 
+        gl.use_program(state.simple_tri_shader);
         let view_proj_uniform_pos = gl.get_uniform_location(state.simple_tri_shader.unwrap(), "view_projection_matrix");
         gl.uniform_matrix_4_f32_slice(view_proj_uniform_pos.as_ref(), false, render_camera.get_view_projection_matrix().as_slice());
         let colour_mul_uniform_pos = gl.get_uniform_location(state.simple_tri_shader.unwrap(), "colourMultiplier");
