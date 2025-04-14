@@ -61,7 +61,6 @@ pub fn load_shader_program(gl : &glow::Context, vertex_shader_src: &str, fragmen
 
 pub fn unload_shader_program(gl : &glow::Context, program: &gl_types::ShaderProgram)
 {
-    console_log!("Shutting down");
     unsafe {
         gl.delete_program(*program);
     }

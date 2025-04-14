@@ -23,10 +23,23 @@ pub struct ImmediateRender
     vertex_array: Option<gl_utils::gl_types::VertexArray>,
     vertex_buffer: Option<gl_utils::gl_types::Buffer>,
     current_vertices: Vec<ImmediateRenderVertex>,
-    current_triangle_draws: Vec<ImmediateRenderDrawcall>
+    current_triangle_draws: Vec<ImmediateRenderDrawcall>,
+    current_line_draws: Vec<ImmediateRenderDrawcall>
 }
 
 impl ImmediateRender {
+    pub fn cleanup(&mut self, gl : &glow::Context)
+    {
+        unsafe{
+            gl.delete_buffer(self.vertex_buffer.unwrap());
+            gl.delete_vertex_array(self.vertex_array.unwrap());
+            gl_utils::unload_shader_program(gl, &self.shader_program.unwrap());
+        }
+        self.vertex_buffer = None;
+        self.vertex_array = None;
+        self.shader_program = None;
+    }
+
     pub fn new(gl : &glow::Context, max_vertex_count: u32) -> Self {
         let vertex_shader_src = r#"#version 300 es
             uniform mat4 view_projection_matrix;
@@ -94,7 +107,8 @@ impl ImmediateRender {
             vertex_buffer: vertex_buffer,
             shader_program: shader_program,
             current_vertices: Vec::new(),
-            current_triangle_draws: Vec::new()
+            current_triangle_draws: Vec::new(),
+            current_line_draws: Vec::new()
         }
     }
 
@@ -121,9 +135,28 @@ impl ImmediateRender {
         self.current_triangle_draws.push(draw);
     }
 
+    pub fn add_line(&mut self, v0: &Point3<f32>, c0: &Point4<f32>, v1: &Point3<f32>, c1: &Point4<f32>) {
+        let v0 = ImmediateRenderVertex {
+            position: Point4::new(v0.x, v0.y, v0.z, 1.0),
+            colour: *c0
+        };
+        let v1 = ImmediateRenderVertex {
+            position: Point4::new(v1.x, v1.y, v1.z, 1.0),
+            colour: *c1
+        };
+        let draw = ImmediateRenderDrawcall {
+            start_vertex: self.current_vertices.len() as i32,
+            vertex_count: 2
+        };
+        self.current_vertices.push(v0);
+        self.current_vertices.push(v1);
+        self.current_line_draws.push(draw);
+    }
+
     pub fn clear(&mut self) {
         self.current_vertices.clear();
         self.current_triangle_draws.clear();
+        self.current_line_draws.clear();
     }
 
     pub fn draw(&self, gl : &glow::Context, camera: &crate::render::camera::Camera) {
@@ -141,6 +174,11 @@ impl ImmediateRender {
             for draw in &self.current_triangle_draws
             {
                 gl.draw_arrays(glow::TRIANGLES, draw.start_vertex, draw.vertex_count);
+            }
+
+            for draw in &self.current_line_draws
+            {
+                gl.draw_arrays(glow::LINES, draw.start_vertex, draw.vertex_count);
             }
         }
     }
