@@ -2,6 +2,7 @@
 pub mod logger;
 pub mod gl_utils;       // make the gl utils public to the crate
 pub mod app;            // make application callbacks public to the crate
+pub mod render;         // make render stuff public
 
 // import platform contexts as modules
 #[cfg(feature = "sdl2")]

@@ -1,8 +1,11 @@
 use glow::HasContext;  
 use crate::gl_utils;
+use crate::render::camera::Camera;
+use nalgebra::{Point3, Vector3};
 
 pub struct ApplicationState {
-    pub bg_red: f32,
+    pub bg: f32,
+    pub time_elapsed: f64,
     pub simple_tri_shader: Option<gl_utils::gl_types::ShaderProgram>
 }
 
@@ -10,23 +13,24 @@ pub struct ApplicationState {
 pub fn init(gl : &glow::Context) -> ApplicationState
 {
     let mut new_state = ApplicationState {
-        bg_red: 0.0, 
+        bg: 0.0, 
+        time_elapsed: 0.0,
         simple_tri_shader: None
     };
 
     let vertex_shader_src = r#"#version 300 es
         const vec2 verts[3] = vec2[3](
-            vec2(0.5f, 1.0f),
             vec2(0.0f, 1.0f),
-            vec2(0.0f, 0.0f)
+            vec2(1.0f, -1.0f),
+            vec2(-1.0f, -1.0f)
         );
         out vec2 vert;
+        uniform mat4 view_projection_matrix;
         void main() {
             vert = verts[gl_VertexID];
-            gl_Position = vec4(vert - 0.5, 0.0, 1.0);
+            gl_Position = view_projection_matrix * vec4(vert, 0.0, 1.0);
         }
-        "#;
-    
+    "#;
     let fragment_shader_src = r#"#version 300 es
         precision mediump float;
         in vec2 vert;
@@ -49,23 +53,29 @@ pub fn init(gl : &glow::Context) -> ApplicationState
 // main tick/update entry point
 pub fn tick(state: &mut ApplicationState, delta_time: f64)
 {
-    state.bg_red = (state.bg_red as f64 + delta_time) as f32;
-    if state.bg_red > 1.0
-    {
-        state.bg_red = 0.0;
-    }
+    state.time_elapsed += delta_time;
+    state.bg = 0.5 + (state.time_elapsed.sin() as f32) * 0.5;
 }
 
 // main update/drawing entry point
-pub fn draw_gl(gl : &glow::Context, state: &ApplicationState,_viewport_width: u32, _viewport_height: u32)
+pub fn draw_gl(gl : &glow::Context, state: &ApplicationState,viewport_width: u32, viewport_height: u32)
 {
+    let aspect: f32 = viewport_width as f32 / viewport_height as f32;
+    let mut render_camera = Camera::make_projection(0.1, 100.0, aspect, 90.0 );
+    render_camera.look_at(Point3::new(2.0,1.0,5.0), Point3::new(0.0,0.0,0.0), Vector3::y());
+
+    console_log!("{}", state.bg);
+
     unsafe {
-        gl.clear_color(state.bg_red, 0.0, 0.0, 1.0);
+        gl.clear_color(state.bg, state.bg, state.bg, 1.0);
         gl.clear(glow::COLOR_BUFFER_BIT);
 
         gl.use_program(state.simple_tri_shader);
+
+        let view_proj_uniform_pos = gl.get_uniform_location(state.simple_tri_shader.unwrap(), "view_projection_matrix");
+        gl.uniform_matrix_4_f32_slice(view_proj_uniform_pos.as_ref(), false, render_camera.get_view_projection_matrix().as_slice());
         let colour_mul_uniform_pos = gl.get_uniform_location(state.simple_tri_shader.unwrap(), "colourMultiplier");
-        gl.uniform_3_f32(colour_mul_uniform_pos.as_ref(), 1.0 - state.bg_red, state.bg_red, 1.0 - state.bg_red);
+        gl.uniform_3_f32(colour_mul_uniform_pos.as_ref(), 1.0 - state.bg, state.bg, 1.0 - state.bg);
         gl.draw_arrays(glow::TRIANGLES, 0, 3);
     }
 }
