@@ -7,6 +7,7 @@ edition = "2024"
 [dependencies]
 glow = { version = "=0.16.0" }
 nalgebra = { version = "0.33.2" }
+rand = { version = "0.9.0" }
 
 # non-wasm dependencies
 # note that the 'bundled' feature of sdl2 will download sdl 2 and build the c libs for you
@@ -18,6 +19,7 @@ sdl2 = { version = "=0.37.0", features = [ "bundled" ], optional = true }
 web-sys = { version = "0.3", features=["HtmlCanvasElement", "WebGl2RenderingContext", "Window", "console"] }
 wasm-bindgen = { version = "0.2" }
 console_error_panic_hook = { version = "0.1.7" }
+getrandom = { version = "0.3.2", features = ["wasm_js"] }  # we need to specify the get_random backend feature since rand crate uses it
 
 [features]
 default = [ "sdl2" ]
