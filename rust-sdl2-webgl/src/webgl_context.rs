@@ -60,8 +60,19 @@ pub fn wasm_main_loop(mut wasm_context : WasmContext, mut app_state: crate::app:
            .dyn_into::<web_sys::HtmlCanvasElement>()
            .unwrap();
 
+        // ensure the canvas always size always fits the entire page
+        let document_element = window().document().unwrap().document_element().unwrap();
+        canvas.set_width(document_element.client_width() as u32);
+        canvas.set_height(document_element.client_height() as u32);
+
         let tick_delta_ms = timestamp - wasm_context.last_tick_time;
         wasm_context.last_tick_time = timestamp;
+
+        let title_text = format!("Update time: {:.2}ms", tick_delta_ms);
+        window()
+           .document()
+           .unwrap()
+           .set_title(&title_text);
 
         crate::app::tick(&mut app_state, tick_delta_ms / 1000.0); 
         crate::app::draw_gl(&wasm_context.gl, &mut app_state, canvas.width(), canvas.height());    // call the shared render fn
