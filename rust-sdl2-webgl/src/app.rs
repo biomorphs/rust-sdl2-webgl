@@ -102,9 +102,8 @@ pub fn draw_gl(gl : &glow::Context, state: &ApplicationState,viewport_width: u32
         gl.viewport(0, 0, viewport_width as i32, viewport_height as i32);
         gl.clear_color(state.bg, state.bg, state.bg, 1.0);
         gl.clear(glow::COLOR_BUFFER_BIT);
-
-        state.im_render.draw(gl, &render_camera);
     }
+    state.im_render.draw(gl, &render_camera);
 }
 
 // cleanup function for desktop app

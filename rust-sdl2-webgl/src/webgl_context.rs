@@ -60,7 +60,7 @@ pub fn wasm_main_loop(mut wasm_context : WasmContext, mut app_state: crate::app:
            .dyn_into::<web_sys::HtmlCanvasElement>()
            .unwrap();
 
-        // ensure the canvas always size always fits the entire page
+        // ensure the canvas size always fits the entire page
         let document_element = window().document().unwrap().document_element().unwrap();
         canvas.set_width(document_element.client_width() as u32);
         canvas.set_height(document_element.client_height() as u32);

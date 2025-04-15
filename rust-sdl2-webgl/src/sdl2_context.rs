@@ -49,19 +49,17 @@ pub fn run_sdl2_event_loop(mut context: SDL2Context, mut app_state: crate::app::
     let perf_timer_frequency = sdl_timer.performance_frequency();
     let mut perf_timer_last_count = sdl_timer.performance_counter();
     while running {
-        {
-            for event in context.event_loop.poll_iter() {
-                match event {
-                    sdl2::event::Event::Quit { .. } => running = false,
-                    sdl2::event::Event::Window { timestamp: _, window_id: _, win_event } => {
-                        if let sdl2::event::WindowEvent::Resized(w, h) = win_event      // detect window resize
-                        {
-                            context.window_width = w as u32;
-                            context.window_height = h as u32;
-                        }
+        for event in context.event_loop.poll_iter() {
+            match event {
+                sdl2::event::Event::Quit { .. } => running = false,
+                sdl2::event::Event::Window { timestamp: _, window_id: _, win_event } => {
+                    if let sdl2::event::WindowEvent::Resized(w, h) = win_event      // detect window resize
+                    {
+                        context.window_width = w as u32;
+                        context.window_height = h as u32;
                     }
-                    _ => {}
                 }
+                _ => {}
             }
         }
 
