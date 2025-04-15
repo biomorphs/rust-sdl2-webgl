@@ -159,6 +159,36 @@ impl ImmediateRender {
         self.current_line_draws.clear();
     }
 
+    fn draw_compacted(gl: &glow::Context, primitive_type: u32, draws: &Vec<ImmediateRenderDrawcall>)
+    {
+        let mut last_vertex_index = -1;
+        let mut current_vertex_count = 0;
+        for draw in draws
+        {
+            if draw.start_vertex == (last_vertex_index + current_vertex_count)
+            {
+                current_vertex_count += draw.vertex_count;
+            }
+            else 
+            {
+                if current_vertex_count > 0
+                {
+                    unsafe {
+                        gl.draw_arrays(primitive_type, last_vertex_index, current_vertex_count);
+                    }
+                }
+                last_vertex_index = draw.start_vertex;
+                current_vertex_count = draw.vertex_count;
+            }
+        }
+        if last_vertex_index != -1 && current_vertex_count > 0
+        {
+            unsafe {
+                gl.draw_arrays(primitive_type, last_vertex_index, current_vertex_count);
+            }
+        }
+    }
+
     pub fn draw(&self, gl : &glow::Context, camera: &crate::render::camera::Camera) {
         unsafe {
              // copy vertex data to buffer
@@ -166,21 +196,13 @@ impl ImmediateRender {
             gl.buffer_sub_data_u8_slice(glow::ARRAY_BUFFER, 0, self.current_vertices.align_to::<u8>().1);
 
             gl.use_program(self.shader_program);
-            
             let view_proj_uniform_pos = gl.get_uniform_location(self.shader_program.unwrap(), "view_projection_matrix");
             gl.uniform_matrix_4_f32_slice(view_proj_uniform_pos.as_ref(), false, camera.get_view_projection_matrix().as_slice());
-            
             gl.bind_vertex_array(self.vertex_array);
-            for draw in &self.current_triangle_draws
-            {
-                gl.draw_arrays(glow::TRIANGLES, draw.start_vertex, draw.vertex_count);
-            }
-
-            for draw in &self.current_line_draws
-            {
-                gl.draw_arrays(glow::LINES, draw.start_vertex, draw.vertex_count);
-            }
         }
+
+        Self::draw_compacted(gl, glow::TRIANGLES, &self.current_triangle_draws);
+        Self::draw_compacted(gl, glow::LINES, &self.current_line_draws);
     }
 }
 
