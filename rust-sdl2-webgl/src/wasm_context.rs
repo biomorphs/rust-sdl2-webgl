@@ -62,6 +62,13 @@ fn register_input_events(canvas: &web_sys::HtmlCanvasElement)
     });
     canvas.set_onmouseup(Some(on_mouse_up.as_ref().unchecked_ref()));
     on_mouse_up.forget();
+
+    // disable context menu on right-click
+    let on_context_menu = Closure::<dyn FnMut() -> bool>::new(move || {
+       return false;
+    });
+    canvas.set_oncontextmenu(Some(on_context_menu.as_ref().unchecked_ref()));
+    on_context_menu.forget();
 }
 
 // Get the gl context from the canvas
