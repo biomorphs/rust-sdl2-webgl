@@ -3,13 +3,14 @@ pub mod logger;
 pub mod gl_utils;       // make the gl utils public to the crate
 pub mod app;            // make application callbacks public to the crate
 pub mod render;         // make render stuff public
+pub mod input;
 
 // import platform contexts as modules
 #[cfg(feature = "sdl2")]
 mod sdl2_context;   
 
 #[cfg(feature = "webgl")]
-mod webgl_context;
+mod wasm_context;
 
 // main entry point
 fn main() {
@@ -19,13 +20,13 @@ fn main() {
         console_error_panic_hook::set_once();
 
         // get the gl context from the canvas
-        let wasm_context = webgl_context::create_context();
+        let context = wasm_context::create_context();
 
         // initialise the app
-        let app_state = app::init(&wasm_context.gl);
+        let app_state = app::init(&context.gl);
 
         // main loop is now handled via requestAnimationFrame
-        webgl_context::wasm_main_loop(wasm_context, app_state);
+        wasm_context::wasm_main_loop(context, app_state);
     }
 
     #[cfg(feature = "sdl2")]

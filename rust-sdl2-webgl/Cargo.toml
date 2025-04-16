@@ -16,7 +16,7 @@ sdl2 = { version = "=0.37.0", features = [ "bundled" ], optional = true }
 
 # wasm dependencies
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-web-sys = { version = "0.3", features=["HtmlCanvasElement", "WebGl2RenderingContext", "Window", "console"] }
+web-sys = { version = "0.3", features=["HtmlCanvasElement", "WebGl2RenderingContext", "Window", "console", "MouseEvent"] }
 wasm-bindgen = { version = "0.2" }
 console_error_panic_hook = { version = "0.1.7" }
 getrandom = { version = "0.3.2", features = ["wasm_js"] }  # we need to specify the get_random backend feature since rand crate uses it

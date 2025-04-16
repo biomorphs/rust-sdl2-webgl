@@ -51,7 +51,7 @@ impl Camera {
     pub fn make_projection(near: f32, far: f32, aspect: f32, fov: f32) -> Self
     {
         let position = Point3::new(0.0, 0.0, 0.0);
-        let target = Point3::new(0.0,0.0,0.0);
+        let target = Point3::new(0.0,0.0,-1.0);
         let up = Vector3::y();
         Camera {
             position: position,
@@ -67,7 +67,7 @@ impl Camera {
     pub fn make_orthographic(left: f32, right: f32, bottom: f32, top: f32, near: f32, far: f32) -> Self
     {
         let position = Point3::new(0.0, 0.0, 0.0);
-        let target = Point3::new(0.0,0.0,0.0);
+        let target = Point3::new(0.0,0.0,-1.0);
         let up = Vector3::y();
         Camera {
             position: position,
