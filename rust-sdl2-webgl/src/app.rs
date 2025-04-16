@@ -1,6 +1,7 @@
 use glow::HasContext;  
 use crate::render::camera::Camera;
 use crate::render::immediate_render::ImmediateRender;
+use crate::render::grid_render::*;
 use nalgebra::{Point3, Point4, Vector3};
 
 struct SimpleParticle
@@ -48,7 +49,7 @@ pub fn init(gl : &glow::Context) -> ApplicationState
     }
 
     ApplicationState {
-        im_render_3d: ImmediateRender::new(gl, 1024 * 16),
+        im_render_3d: ImmediateRender::new(gl, 1024 * 32),
         im_render_2d: ImmediateRender::new(gl, 1024 * 4),
         bg: 0.0, 
         time_elapsed: 0.0,
@@ -110,6 +111,12 @@ pub fn tick(state: &mut ApplicationState, input: &crate::input::InputState, delt
         state.im_render_2d.add_triangle(&p0, &colour, &p1, &colour, &p2, &colour);
     }
 
+    draw_grid_xz(&mut state.im_render_3d, 
+        &Point3::new(-128.0, 0.0, -128.0), 
+        &Point3::new(256.0,0.0,256.0), 
+        1.0, 
+        &Point4::new(0.7,0.7,0.7,1.0));
+
     state.time_elapsed += delta_time;
     state.bg = 0.2 + (0.5 + (state.time_elapsed.sin() as f32) * 0.5) * 0.4;
 }
@@ -141,4 +148,5 @@ pub fn draw_gl(gl : &glow::Context, state: &ApplicationState,viewport_width: u32
 pub fn cleanup_gl_resources(gl : &glow::Context, state: &mut ApplicationState)
 {
     state.im_render_3d.cleanup(gl);
+    state.im_render_2d.cleanup(gl);
 }

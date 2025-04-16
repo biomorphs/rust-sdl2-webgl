@@ -31,6 +31,9 @@ fn request_animation_frame(f: &Closure<dyn FnMut(f64)>)
 fn register_input_events(canvas: &web_sys::HtmlCanvasElement)
 {
     // register input events from canvas
+    // we may want to use the pointer event API instead of mouse
+    // it would allow us to get touch events on mobile
+
     let on_mouse_move = Closure::<dyn FnMut(web_sys::MouseEvent)>::new(move |event: web_sys::MouseEvent| {
         let mut mutable_input = INPUT_STATE.lock().unwrap();
         mutable_input.mouse_state.position_x = event.client_x();
