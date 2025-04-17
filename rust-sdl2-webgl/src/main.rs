@@ -4,6 +4,7 @@ pub mod gl_utils;       // make the gl utils public to the crate
 pub mod app;            // make application callbacks public to the crate
 pub mod render;         // make render stuff public
 pub mod input;
+pub mod top_down_camera;
 
 // import platform contexts as modules
 #[cfg(feature = "sdl2")]
