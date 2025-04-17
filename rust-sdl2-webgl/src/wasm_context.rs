@@ -66,6 +66,45 @@ fn register_input_events(canvas: &web_sys::HtmlCanvasElement)
     canvas.set_onmouseup(Some(on_mouse_up.as_ref().unchecked_ref()));
     on_mouse_up.forget();
 
+    // basic pointer events to handle touch-devices
+    // pretend touch events are just mouse left-click events for now
+    let on_pointer_down = Closure::<dyn FnMut(web_sys::PointerEvent)>::new(move |event: web_sys::PointerEvent| {
+        let mut mutable_input = INPUT_STATE.lock().unwrap();
+        if event.pointer_type() == "touch"
+        {
+            console_log!("Touch!");
+            mutable_input.mouse_state.position_x = event.client_x();
+            mutable_input.mouse_state.position_y = event.client_y();
+            mutable_input.mouse_state.left_btn_down = true;
+        }
+    });
+    canvas.set_onpointerdown(Some(on_pointer_down.as_ref().unchecked_ref()));
+    on_pointer_down.forget();
+
+    let on_pointer_up = Closure::<dyn FnMut(web_sys::PointerEvent)>::new(move |event: web_sys::PointerEvent| {
+        let mut mutable_input = INPUT_STATE.lock().unwrap();
+        if event.pointer_type() == "touch"
+        {
+            console_log!("Touch release!");
+            mutable_input.mouse_state.position_x = event.client_x();
+            mutable_input.mouse_state.position_y = event.client_y();
+            mutable_input.mouse_state.left_btn_down = false;
+        }
+    });
+    canvas.set_onpointerup(Some(on_pointer_up.as_ref().unchecked_ref()));
+    on_pointer_up.forget();
+
+    let on_pointer_cancel = Closure::<dyn FnMut(web_sys::PointerEvent)>::new(move |event: web_sys::PointerEvent| {
+        let mut mutable_input = INPUT_STATE.lock().unwrap();
+        if event.pointer_type() == "touch"
+        {
+            console_log!("Touch cancel!");
+            mutable_input.mouse_state.left_btn_down = false;
+        }
+    });
+    canvas.set_onpointercancel(Some(on_pointer_cancel.as_ref().unchecked_ref()));
+    on_pointer_cancel.forget();
+
     // disable context menu on right-click
     let on_context_menu = Closure::<dyn FnMut() -> bool>::new(move || {
        return false;
