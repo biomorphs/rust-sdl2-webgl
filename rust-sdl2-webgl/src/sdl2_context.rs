@@ -79,7 +79,7 @@ pub fn run_sdl2_event_loop(mut context: SDL2Context, mut app_state: crate::app::
         let tick_delta : f64 = (perf_timer_this_count - perf_timer_last_count) as f64 / perf_timer_frequency as f64;
         perf_timer_last_count = perf_timer_this_count;
 
-        crate::app::tick(&mut app_state, &app_input, tick_delta);
+        crate::app::tick(&mut app_state, &app_input, tick_delta, context.window_width, context.window_height);
         crate::app::draw_gl(&context.gl, &app_state, context.window_width, context.window_height);
         
         context.window.gl_swap_window();

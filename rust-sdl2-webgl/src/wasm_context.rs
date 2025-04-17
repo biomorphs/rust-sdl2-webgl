@@ -129,7 +129,7 @@ pub fn wasm_main_loop(mut wasm_context : WasmContext, mut app_state: crate::app:
            .unwrap()
            .set_title(&title_text);
 
-        crate::app::tick(&mut app_state, &INPUT_STATE.lock().unwrap(), tick_delta_ms / 1000.0); 
+        crate::app::tick(&mut app_state, &INPUT_STATE.lock().unwrap(), tick_delta_ms / 1000.0, canvas.width(), canvas.height()); 
         crate::app::draw_gl(&wasm_context.gl, &mut app_state, canvas.width(), canvas.height());    // call the shared render fn
 
         request_animation_frame(f.borrow().as_ref().unwrap());  // register next frame
