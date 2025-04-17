@@ -3,7 +3,7 @@ use crate::render::camera::Camera;
 use crate::render::immediate_render::ImmediateRender;
 use crate::render::grid_render::*;
 use crate::top_down_camera::*;
-use nalgebra::{Point3, Point4, Vector3};
+use nalgebra::{Isometry3, Point3, Point4, Vector3};
 
 struct SimpleParticle
 {
@@ -32,9 +32,11 @@ impl SimpleParticle {
         Self { position, size, velocity, colour }
     }
 
-    fn tick(particles: &mut Vec<SimpleParticle>, delta_time: f64, im_render: &mut ImmediateRender)
+    fn tick(particles: &mut Vec<SimpleParticle>, delta_time: f64, im_render: &mut ImmediateRender, inverse_view: Isometry3<f32>)
     {
         const GRAVITY: f64 = -9.8;
+        let camera_up: Vector3<f32> = inverse_view * Vector3::y();      // worldspace up/right for billboarding
+        let camera_right: Vector3<f32> = inverse_view * Vector3::x();
         for particle in particles {
             particle.velocity.y = particle.velocity.y + (GRAVITY * delta_time) as f32;
             particle.position = particle.position + particle.velocity * delta_time as f32;
@@ -43,9 +45,9 @@ impl SimpleParticle {
                 *particle = SimpleParticle::new();
             }
 
-            let p0 = particle.position + Vector3::new(0.0,particle.size,0.0);
-            let p1 = particle.position + Vector3::new(-particle.size,-particle.size,0.0);
-            let p2 = particle.position + Vector3::new(particle.size,-particle.size,0.0);
+            let p0 = particle.position + camera_up * particle.size;
+            let p1 = particle.position + (camera_right * -particle.size) + (camera_up * -particle.size);
+            let p2 = particle.position + (camera_right * particle.size) + (camera_up * -particle.size);
             im_render.add_triangle(&p0, &particle.colour, &p1, &particle.colour, &p2, &particle.colour);
         }
     }
@@ -87,7 +89,9 @@ pub fn tick(state: &mut ApplicationState, input: &crate::input::InputState, delt
     state.im_render_3d.clear();
     state.im_render_2d.clear();
 
-    SimpleParticle::tick(&mut state.particles, delta_time, &mut state.im_render_3d);
+    // for particle billboards
+    let inverse_view = state.render_camera_3d.get_view_transform().inverse();
+    SimpleParticle::tick(&mut state.particles, delta_time, &mut state.im_render_3d, inverse_view);
 
     // top-down camera input update
     if input.mouse_state.left_btn_down 

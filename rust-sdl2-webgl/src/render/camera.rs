@@ -80,4 +80,9 @@ impl Camera {
         }
     }
 
+    pub fn get_view_transform(&self) -> Isometry3<f32>
+    {
+        self.view_transform
+    }
+
 }
