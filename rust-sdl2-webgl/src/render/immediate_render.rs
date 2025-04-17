@@ -52,7 +52,7 @@ impl ImmediateRender {
             }
         "#;
         let fragment_shader_src = r#"#version 300 es
-            precision mediump float;
+            precision highp float;
             in vec4 vs_out_colour;
             out vec4 fs_out_colour;
             void main() {

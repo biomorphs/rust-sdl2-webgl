@@ -127,8 +127,8 @@ pub fn tick(state: &mut ApplicationState, input: &crate::input::InputState, delt
     state.camera.apply_to_render_camera(&mut state.render_camera_3d);
 
     draw_grid_xz(&mut state.im_render_3d, 
-        &Point3::new(-128.0, 0.0, -128.0), 
-        &Point3::new(256.0,0.0,256.0), 
+        &Point3::new(-64.0, 0.0, -64.0), 
+        &Point3::new(128.0,0.0,128.0), 
         2.0, 
         &Point4::new(0.7,0.7,0.7,1.0));
 }
